@@ -11,7 +11,7 @@
 
     <div>
         <label class="block text-sm text-gray-600 mb-1">Description</label>
-        <textarea name="description" rows="4" class="w-full border border-gray-300 rounded-lg px-3 py-2">{{ old('description', $s->description ?? '') }}</textarea>
+        <textarea data-rich name="description" rows="4" class="w-full border border-gray-300 rounded-lg px-3 py-2">{{ old('description', $s->description ?? '') }}</textarea>
     </div>
 
     <div>
@@ -25,7 +25,7 @@
         @if ($s && $s->image)
             <img src="{{ asset('storage/'.$s->image) }}" class="h-20 w-20 rounded object-cover mb-2" alt="">
         @endif
-        <input type="file" name="image" accept="image/*" class="text-sm">
+        <input data-preview type="file" name="image" accept="image/*" class="text-sm">
         @error('image') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
     </div>
 

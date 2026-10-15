@@ -12,4 +12,9 @@ class Service extends Model
     {
         return $this->belongsToMany(ServiceRequest::class, 'service_request_service')->withTimestamps();
     }
+
+    public function setDescriptionAttribute($value): void
+    {
+        $this->attributes['description'] = \App\Support\Html::clean($value);
+    }
 }

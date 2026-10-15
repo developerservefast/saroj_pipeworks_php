@@ -1,71 +1,106 @@
-
 @extends('admin.layouts.app')
 @section('title', 'Products')
+
 @section('content')
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 class="text-2xl font-bold text-sky-700">Products</h2>
-        <a href="{{ route('admin.products.create') }}"
-           class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">+ Add Product</a>
+@php
+    $opts = collect();
+    foreach ($categories as $p) { $opts->push([$p->id, $p->name]); foreach ($p->children as $ch) $opts->push([$ch->id, $p->name.' › '.$ch->name]); }
+@endphp
+
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-gray-500">{{ $products->total() }} products</p>
+    <a href="{{ route('admin.products.create') }}" class="btn-primary">+ Add Product</a>
+</div>
+
+<form method="GET" class="card mb-4 grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4">
+    <input type="text" name="q" value="{{ request('q') }}" placeholder="Search products" class="input">
+    <select name="category" class="input">
+        <option value="">All categories</option>
+        @foreach ($opts as [$id, $label]) <option value="{{ $id }}" @selected(request('category') == $id)>{{ $label }}</option> @endforeach
+    </select>
+    <select name="brand" class="input">
+        <option value="">All brands</option>
+        @foreach ($brands as $b) <option value="{{ $b->id }}" @selected(request('brand') == $b->id)>{{ $b->name }}</option> @endforeach
+    </select>
+    <select name="status" class="input">
+        <option value="">Any status</option>
+        <option value="active" @selected(request('status') == 'active')>Active</option>
+        <option value="hidden" @selected(request('status') == 'hidden')>Hidden</option>
+    </select>
+    <select name="badge" class="input">
+        <option value="">Any label</option>
+        <option value="is_bestseller" @selected(request('badge') == 'is_bestseller')>Best Seller</option>
+        <option value="is_trending" @selected(request('badge') == 'is_trending')>Trending</option>
+        <option value="is_latest" @selected(request('badge') == 'is_latest')>Latest</option>
+    </select>
+    <select name="sort" class="input">
+        @foreach (['newest' => 'Newest first', 'oldest' => 'Oldest first', 'name' => 'Name A-Z', 'category' => 'Category'] as $k => $l)
+            <option value="{{ $k }}" @selected(request('sort', 'newest') == $k)>{{ $l }}</option>
+        @endforeach
+    </select>
+    <button class="btn-primary">Filter</button>
+    <a href="{{ route('admin.products.index') }}" class="btn-outline">Reset</a>
+</form>
+
+<form id="bulk" method="POST" action="{{ route('admin.products.bulk') }}" class="card mb-3 flex flex-wrap items-center gap-2 p-3" onsubmit="return bulkOk(this)">
+    @csrf
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="selAll"> Select all on this page</label>
+    <select name="action" id="act" class="input w-full sm:w-44" required>
+        <option value="">Bulk action…</option>
+        <option value="show">Show on website</option>
+        <option value="hide">Hide</option>
+        <option value="move">Move to category</option>
+        <option value="delete">Delete</option>
+    </select>
+    <select name="target_category" id="tgt" class="input hidden w-full sm:w-64">
+        <option value="">Choose category…</option>
+        @foreach ($opts as [$id, $label]) <option value="{{ $id }}">{{ $label }}</option> @endforeach
+    </select>
+    <button class="btn-outline">Apply</button>
+</form>
+
+<div class="space-y-2">
+@forelse ($products as $product)
+    <div class="card flex flex-wrap items-center gap-3 p-3">
+        <input type="checkbox" name="ids[]" value="{{ $product->id }}" form="bulk" class="row-cb h-4 w-4">
+        @if ($product->image)
+            <img src="{{ asset('storage/'.$product->image) }}" class="h-14 w-14 shrink-0 rounded object-cover" alt="">
+        @else
+            <div class="h-14 w-14 shrink-0 rounded bg-sky-100"></div>
+        @endif
+        <div class="min-w-0 flex-1 basis-40">
+            <p class="truncate font-medium">{{ $product->name }}</p>
+            <p class="truncate text-xs text-gray-500">{{ $product->category->parent ? $product->category->parent->name.' › ' : '' }}{{ $product->category->name }}{{ $product->brandRecord ? ' · '.$product->brandRecord->name : '' }}</p>
+            <div class="mt-1 flex flex-wrap gap-1">
+                @if ($product->is_bestseller)<span class="rounded bg-amber-100 px-1.5 text-[11px] text-amber-700">Best Seller</span>@endif
+                @if ($product->is_trending)<span class="rounded bg-rose-100 px-1.5 text-[11px] text-rose-700">Trending</span>@endif
+                @if ($product->is_latest)<span class="rounded bg-emerald-100 px-1.5 text-[11px] text-emerald-700">Latest</span>@endif
+            </div>
+        </div>
+        <div class="text-sm">{{ $product->price !== null ? '₹'.number_format($product->price, 2) : '-' }}</div>
+        <span class="rounded-full px-2 py-0.5 text-xs {{ $product->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">{{ $product->is_active ? 'Active' : 'Hidden' }}</span>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.products.edit', $product) }}" class="btn-outline !px-3 !py-1.5">Edit</a>
+            <form method="POST" action="{{ route('admin.products.duplicate', $product) }}">@csrf<button class="btn-outline !px-3 !py-1.5">Duplicate</button></form>
+            <form method="POST" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return confirm('Delete this product?')">@csrf @method('DELETE')<button class="btn-danger !px-3 !py-1.5">Delete</button></form>
+        </div>
     </div>
+@empty
+    <p class="card p-6 text-center text-gray-500">No products found.</p>
+@endforelse
+</div>
 
-    <form method="GET" class="flex flex-wrap gap-2 mb-4">
-        <input type="text" name="q" value="{{ request('q') }}" placeholder="Search products"
-               class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-        <select name="category" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-            <option value="">All categories</option>
-            @foreach ($categories as $c)
-                <option value="{{ $c->id }}" @selected(request('category') == $c->id)>{{ $c->name }}</option>
-            @endforeach
-        </select>
-        <button class="bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-sm">Filter</button>
-    </form>
+<div class="mt-4">{{ $products->links() }}</div>
 
-    <div class="bg-white rounded-xl shadow overflow-x-auto">
-        <table class="w-full text-sm text-left">
-            <thead class="bg-sky-50 text-gray-600">
-                <tr>
-                    <th class="px-4 py-3">Image</th>
-                    <th class="px-4 py-3">Name</th>
-                    <th class="px-4 py-3">Category</th>
-                    <th class="px-4 py-3">Price</th>
-                    <th class="px-4 py-3">Status</th>
-                    <th class="px-4 py-3 text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($products as $product)
-                    <tr class="border-t border-gray-100">
-                        <td class="px-4 py-2">
-                            @if ($product->image)
-                                <img src="{{ asset('storage/'.$product->image) }}" class="h-10 w-10 rounded object-cover" alt="">
-                            @else
-                                <div class="h-10 w-10 rounded bg-sky-100"></div>
-                            @endif
-                        </td>
-                        <td class="px-4 py-2 font-medium">{{ $product->name }}</td>
-                        <td class="px-4 py-2 text-gray-600">{{ $product->category->name }}</td>
-                        <td class="px-4 py-2">{{ $product->price !== null ? '₹'.number_format($product->price, 2) : '-' }}</td>
-                        <td class="px-4 py-2">
-                            <span class="px-2 py-1 rounded-full text-xs {{ $product->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
-                                {{ $product->is_active ? 'Active' : 'Hidden' }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-2 text-right whitespace-nowrap">
-                            <a href="{{ route('admin.products.edit', $product) }}" class="text-sky-600 hover:underline mr-3">Edit</a>
-                            <form method="POST" action="{{ route('admin.products.destroy', $product) }}" class="inline"
-                                  onsubmit="return confirm('Delete this product?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="text-red-600 hover:underline">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">No products found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-4">{{ $products->links() }}</div>
+<script>
+    const act = document.getElementById('act'), tgt = document.getElementById('tgt');
+    act.onchange = () => tgt.classList.toggle('hidden', act.value !== 'move');
+    document.getElementById('selAll').onchange = e => document.querySelectorAll('.row-cb').forEach(c => c.checked = e.target.checked);
+    function bulkOk(f) {
+        const n = document.querySelectorAll('.row-cb:checked').length;
+        if (!n) { alert('Tick at least one product first.'); return false; }
+        if (act.value === 'move' && !tgt.value) { alert('Choose the category to move to.'); return false; }
+        return act.value === 'delete' ? confirm('Delete ' + n + ' product(s)? This cannot be undone.') : true;
+    }
+</script>
 @endsection

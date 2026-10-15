@@ -8,21 +8,24 @@ use Illuminate\Http\Request;
 
 class ProductPageController extends Controller
 {
-    public function index(Request $request)
-    {
-        $categories = ProductCategory::orderBy('sort_order')->get();
-        $current = $categories->firstWhere('slug', $request->category);
+   public function index(\Illuminate\Http\Request $request)
+{
+    $tree = \App\Models\ProductCategory::whereNull('parent_id')->where('is_active', true)->with(['children' => fn ($q) => $q->where('is_active', true)])
+        ->orderBy('sort_order')->orderBy('name')->get();
 
-        $products = Product::with('category')
-            ->where('is_active', true)
-            ->when($current, fn ($q) => $q->where('product_category_id', $current->id))
-            ->when($request->q, fn ($q, $term) => $q->where('name', 'like', "%{$term}%"))
-            ->orderBy('product_category_id')->orderBy('sort_order')
-            ->paginate(12)->withQueryString();
+    $active = $request->filled('category') ? \App\Models\ProductCategory::with('children')->find($request->category) : null;
+    $search = trim((string) $request->query('q'));
 
-        return view('products.index', compact('categories', 'current', 'products'));
+    $products = null;
+    if ($active || $search !== '') {
+        $q = \App\Models\Product::with(['brandRecord', 'variants'])->where('is_active', true)->whereHas('category', fn ($c) => $c->where('is_active', true));
+        if ($active) $q->whereIn('product_category_id', $active->children->pluck('id')->push($active->id));
+        if ($search !== '') $q->where('name', 'like', "%{$search}%");
+        $products = $q->orderBy('sort_order')->orderBy('name')->paginate(24)->withQueryString();
     }
 
+    return view('products.index', compact('tree', 'active', 'products', 'search'));
+}
     public function show(Product $product)
     {
         abort_unless($product->is_active, 404);

@@ -15,7 +15,9 @@ class ServiceRequestController extends Controller
             ->latest()
             ->paginate(20)->withQueryString();
 
-        return view('admin.service-requests.index', compact('requests'));
+        $counts = ServiceRequest::selectRaw('status, count(*) c')->groupBy('status')->pluck('c', 'status');
+
+        return view('admin.service-requests.index', compact('requests', 'counts'));
     }
 
     public function show(ServiceRequest $serviceRequest)
