@@ -16,6 +16,7 @@
                 <span class="text-base font-bold text-brand-dark">&#8377;{{ number_format($product->price * (100 - $disc) / 100, 2) }}</span>
                 @if ($disc > 0)
                     <span class="text-xs text-gray-400 line-through">&#8377;{{ number_format($product->price, 2) }}</span>
+                    <span class="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">{{ $disc }}% off</span>
                 @endif
                 @if ($product->unit)
                     <span class="text-xs text-gray-500">/ {{ $product->unit }}</span>

@@ -19,6 +19,7 @@ class HomeController extends Controller
             'categories' => ProductCategory::whereNull('parent_id')->where('is_active', true)
                 ->orderBy('sort_order')->orderBy('name')->get(),
             'services' => Service::where('is_active', true)->orderBy('sort_order')->take(9)->get(),
+            'allServices' => Service::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
             'rows' => [
                 'Best Sellers' => $row('is_bestseller'),
                 'Trending' => $row('is_trending'),
