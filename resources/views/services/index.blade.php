@@ -38,6 +38,8 @@
                         <p class="mt-2 flex-1 text-sm text-gray-600">{{ \Illuminate\Support\Str::limit(strip_tags($service->description), 120) }}</p>
                     @endif
 
+                    <p class="mt-3 text-base font-bold text-brand-dark">{{ $service->priceLabel() }}</p>
+
                     <button type="button" data-book data-id="{{ $service->id }}"
                             class="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark">
                         Book this service

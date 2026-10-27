@@ -41,6 +41,7 @@ class ServiceController extends Controller
 
     public function update(Request $request, Service $service)
     {
+          \Log::info('service update', $request->all());
         $data = $this->validated($request);
 
         if ($request->hasFile('image')) {
@@ -72,10 +73,21 @@ class ServiceController extends Controller
             'description' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'image', 'max:2048'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'price_type' => ['required', 'in:fixed,starting_from,on_inspection'],
         ]);
 
         $data['sort_order'] = $data['sort_order'] ?? 0;
         $data['is_active'] = $request->boolean('is_active');
+        if ($data['price_type'] === 'on_inspection' && ($data['price'] ?? '') !== '') {
+            $data['price_type'] = 'fixed';
+        }
+        if ($data['price_type'] !== 'on_inspection' && ($data['price'] ?? '') === '') {
+            $data['price_type'] = 'on_inspection';
+        }
+        if ($data['price_type'] === 'on_inspection') {
+            $data['price'] = null;
+        }
         unset($data['image']);
 
         return $data;

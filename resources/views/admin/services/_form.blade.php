@@ -35,6 +35,23 @@
     </label>
 </div>
 
+<div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <div>
+        <label class="block text-sm text-gray-600 mb-1">Price type *</label>
+        <select name="price_type" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            @foreach (['fixed' => 'Fixed price', 'starting_from' => 'Starting from', 'on_inspection' => 'Price on inspection'] as $val => $text)
+                <option value="{{ $val }}" @selected(old('price_type', $s->price_type ?? 'on_inspection') === $val)>{{ $text }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div>
+        <label class="block text-sm text-gray-600 mb-1">Price (&#8377;)</label>
+        <input type="number" step="0.01" min="0" name="price" value="{{ old('price', $s->price ?? '') }}"
+               class="w-full border border-gray-300 rounded-lg px-3 py-2">
+        @error('price') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+    </div>
+</div>
+
 <div class="mt-6 flex gap-3">
     <button class="bg-sky-500 hover:bg-sky-600 text-white font-semibold px-5 py-2 rounded-lg">Save</button>
     <a href="{{ route('admin.services.index') }}" class="px-5 py-2 text-gray-600 hover:text-sky-600">Cancel</a>
