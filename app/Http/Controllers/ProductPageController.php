@@ -15,16 +15,26 @@ class ProductPageController extends Controller
 
     $active = $request->filled('category') ? \App\Models\ProductCategory::with('children')->find($request->category) : null;
     $search = trim((string) $request->query('q'));
+    $sort = in_array($request->query('sort'), ['new', 'az', 'za'], true) ? $request->query('sort') : '';
 
     $products = null;
     if ($active || $search !== '') {
         $q = \App\Models\Product::with(['brandRecord', 'variants'])->where('is_active', true)->whereHas('category', fn ($c) => $c->where('is_active', true));
         if ($active) $q->whereIn('product_category_id', $active->children->pluck('id')->push($active->id));
-        if ($search !== '') $q->where('name', 'like', "%{$search}%");
-        $products = $q->orderBy('sort_order')->orderBy('name')->paginate(24)->withQueryString();
+        if ($search !== '') {
+        foreach (preg_split('/\s+/', mb_substr($search, 0, 100)) as $w) {
+            $w = addcslashes($w, '%_\\');
+            $q->where(fn ($s) => $s->where('name', 'like', "%{$w}%")
+                ->orWhere('brand', 'like', "%{$w}%")
+                ->orWhereHas('brandRecord', fn ($b) => $b->where('name', 'like', "%{$w}%"))
+                ->orWhereHas('category', fn ($c) => $c->where('name', 'like', "%{$w}%")));
+        }
+    }
+        match ($sort) { 'new' => $q->latest(), 'az' => $q->orderBy('name'), 'za' => $q->orderByDesc('name'), default => $q->orderBy('sort_order')->orderBy('name') };
+        $products = $q->paginate(24)->withQueryString();
     }
 
-    return view('products.index', compact('tree', 'active', 'products', 'search'));
+    return view('products.index', compact('tree', 'active', 'products', 'search', 'sort'));
 }
     public function show(Product $product)
     {
