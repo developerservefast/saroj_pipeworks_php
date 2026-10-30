@@ -76,7 +76,17 @@
             </div>
 
             @if ($product->description)
-                <div class="rich mt-5 leading-relaxed text-gray-700">{!! \App\Support\Html::display($product->description) !!}</div>
+                @if ($product->stock_quantity !== null)
+                @if ($product->stock_quantity === 0)
+                    <p class="mt-4 inline-block rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">Out of stock</p>
+                @elseif ($product->stock_quantity <= 5)
+                    <p class="mt-4 inline-block rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">Only {{ $product->stock_quantity }} left</p>
+                @else
+                    <p class="mt-4 inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">In stock</p>
+                @endif
+            @endif
+
+            <div class="rich mt-5 leading-relaxed text-gray-700">{!! \App\Support\Html::display($product->description) !!}</div>
             @endif
 
             @if ($product->variants->isNotEmpty())

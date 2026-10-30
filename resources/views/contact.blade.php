@@ -62,6 +62,167 @@
             </div>
         </div>
 
+        <div id="contact-form" class="mt-8 scroll-mt-28 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-sky-100 sm:mt-10 sm:p-8">
+            <h2 class="text-xl font-bold text-brand-dark sm:text-2xl">Send us a message</h2>
+            <p class="mt-1 text-sm text-gray-600">Fill in the form and we will call you back.</p>
+
+            @if (session('success'))
+                <div class="mt-4 rounded-lg bg-green-100 px-4 py-3 text-sm text-green-800">{{ session('success') }}</div>
+            @endif
+
+            <form novalidate method="POST" action="{{ route('contact.send') }}" class="mt-5 grid gap-4 sm:grid-cols-2">
+                @csrf
+                <input type="text" name="website" value="" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+
+                <div>
+                    <label for="ct-name" class="mb-1 block text-sm font-medium text-gray-700">Your name *</label>
+                    <input type="text" id="ct-name" name="name" value="{{ old('name') }}" required minlength="2" maxlength="60" autocomplete="name" class="w-full rounded-lg border border-gray-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand">
+                    @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="ct-phone" class="mb-1 block text-sm font-medium text-gray-700">Mobile number *</label>
+                    <input type="tel" id="ct-phone" name="phone" value="{{ old('phone') }}" required inputmode="numeric" autocomplete="tel-national" placeholder="98765 43210" class="w-full rounded-lg border border-gray-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand">
+                    @error('phone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="ct-email" class="mb-1 block text-sm font-medium text-gray-700">Email (optional)</label>
+                    <input type="email" id="ct-email" name="email" value="{{ old('email') }}" maxlength="255" autocomplete="email" class="w-full rounded-lg border border-gray-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand">
+                    @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="ct-subject" class="mb-1 block text-sm font-medium text-gray-700">Subject (optional)</label>
+                    <input type="text" id="ct-subject" name="subject" value="{{ old('subject') }}" maxlength="120" class="w-full rounded-lg border border-gray-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand">
+                    @error('subject')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="ct-message" class="mb-1 block text-sm font-medium text-gray-700">Message *</label>
+                    <textarea id="ct-message" name="message" rows="4" required minlength="10" maxlength="2000" class="w-full rounded-lg border border-gray-300 px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand">{{ old('message') }}</textarea>
+                    @error('message')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div class="sm:col-span-2">
+                    <button type="submit" class="min-h-12 w-full rounded-lg bg-brand px-6 py-3 font-semibold text-white transition hover:bg-brand-dark sm:w-auto">Send message</button>
+                </div>
+            </form>
+            <script>
+                (function () {
+                    var box = document.getElementById('contact-form');
+                    var form = box.querySelector('form');
+                    var submitBtn = form.querySelector('button[type=submit]');
+                    var F = {
+                        name: document.getElementById('ct-name'),
+                        phone: document.getElementById('ct-phone'),
+                        email: document.getElementById('ct-email'),
+                        subject: document.getElementById('ct-subject'),
+                        message: document.getElementById('ct-message')
+                    };
+
+                    function errEl(key) {
+                        var el = F[key], p = el.parentNode.querySelector('p.text-red-600');
+                        if (!p) { p = document.createElement('p'); p.className = 'mt-1 text-sm text-red-600 hidden'; el.parentNode.appendChild(p); }
+                        return p;
+                    }
+                    function show(key, msg) {
+                        var p = errEl(key);
+                        p.textContent = msg;
+                        p.classList.toggle('hidden', msg === '');
+                        if (msg) { F[key].setAttribute('aria-invalid', 'true'); F[key].classList.add('border-red-500'); }
+                        else { F[key].removeAttribute('aria-invalid'); F[key].classList.remove('border-red-500'); }
+                    }
+                    function counter(key, text) {
+                        var label = F[key].parentNode.querySelector('label');
+                        label.classList.add('flex', 'justify-between');
+                        var s = document.createElement('span');
+                        s.className = 'text-xs font-normal text-gray-400';
+                        s.textContent = text;
+                        label.appendChild(s);
+                        return s;
+                    }
+                    var phoneCount = counter('phone', '0/10');
+                    var msgCount = counter('message', '0/2000');
+
+                    function normPhone(v) {
+                        var d = String(v).replace(/\D/g, '');
+                        if (d.length === 12 && d.indexOf('91') === 0) { d = d.slice(2); }
+                        else if (d.length === 11 && d.indexOf('0') === 0) { d = d.slice(1); }
+                        return d;
+                    }
+
+                    var rules = {
+                        name: function (v) {
+                            v = v.trim().replace(/\s+/g, ' ');
+                            if (v === '') return 'Please enter your name.';
+                            if (v.length < 2) return 'Name must be at least 2 characters.';
+                            if (v.length > 60) return 'Name must be 60 characters or fewer.';
+                            if (!/^[\p{L}][\p{L}\p{M}\s.'\-]*$/u.test(v)) return 'Use letters only. Numbers and symbols are not allowed.';
+                            return '';
+                        },
+                        phone: function (v) {
+                            var d = normPhone(v);
+                            if (d === '') return 'Please enter your mobile number.';
+                            if (!/^[6-9]\d{9}$/.test(d)) return 'Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.';
+                            if (/^(\d)\1{9}$/.test(d)) return 'Please enter a real mobile number.';
+                            return '';
+                        },
+                        email: function (v) {
+                            v = v.trim();
+                            if (v === '') return '';
+                            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? '' : 'Please enter a valid email address.';
+                        },
+                        subject: function (v) { return v.trim().length > 120 ? 'Subject must be 120 characters or fewer.' : ''; },
+                        message: function (v) {
+                            v = v.trim();
+                            if (v === '') return 'Please write your message.';
+                            if (v.length < 10) return 'Please write a little more (at least 10 characters).';
+                            if (v.length > 2000) return 'Message must be 2000 characters or fewer.';
+                            return '';
+                        }
+                    };
+                    function check(key) { var m = rules[key](F[key].value); show(key, m); return m === ''; }
+
+                    F.name.addEventListener('input', function () {
+                        var before = F.name.value;
+                        var after = before.replace(/[^\p{L}\p{M}\s.'\-]/gu, '').replace(/^[^\p{L}]+/u, '');
+                        if (after !== before) { F.name.value = after; show('name', 'Only letters are allowed. Numbers and symbols are not accepted.'); }
+                        else if (F.name.hasAttribute('aria-invalid')) { check('name'); }
+                    });
+                    F.phone.addEventListener('input', function () {
+                        var d = normPhone(F.phone.value).slice(0, 10), bad = false;
+                        if (d.length > 0 && !/^[6-9]/.test(d)) { d = d.replace(/^[^6-9]+/, ''); bad = true; }
+                        F.phone.value = d;
+                        phoneCount.textContent = d.length + '/10';
+                        if (bad) { show('phone', 'Mobile number must start with 6, 7, 8 or 9.'); }
+                        else if (F.phone.hasAttribute('aria-invalid')) { check('phone'); }
+                    });
+                    F.message.addEventListener('input', function () {
+                        msgCount.textContent = F.message.value.length + '/2000';
+                        if (F.message.hasAttribute('aria-invalid')) { check('message'); }
+                    });
+                    ['email', 'subject'].forEach(function (k) {
+                        F[k].addEventListener('input', function () { if (F[k].hasAttribute('aria-invalid')) { check(k); } });
+                    });
+                    Object.keys(F).forEach(function (k) { F[k].addEventListener('blur', function () { check(k); }); });
+
+                    form.addEventListener('submit', function (e) {
+                        F.phone.value = normPhone(F.phone.value);
+                        var first = null;
+                        ['name', 'phone', 'email', 'subject', 'message'].forEach(function (k) {
+                            if (!check(k) && !first) { first = F[k]; }
+                        });
+                        if (first) { e.preventDefault(); first.focus(); return; }
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Sending...';
+                    });
+                    window.addEventListener('pageshow', function () { submitBtn.disabled = false; submitBtn.textContent = 'Send message'; });
+
+                    phoneCount.textContent = normPhone(F.phone.value).length + '/10';
+                    msgCount.textContent = F.message.value.length + '/2000';
+                    @if ($errors->any() || session('success'))
+                        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    @endif
+                })();
+            </script>
+        </div>
+
         <div class="mt-8 rounded-2xl bg-gradient-to-br from-brand-dark to-brand p-6 text-center text-white sm:mt-10 sm:p-10">
             <h2 class="text-xl font-bold sm:text-3xl">Need a plumber or a product?</h2>
             <p class="mx-auto mt-2 max-w-xl text-sm text-sky-100 sm:text-base">Send a service request and we will call you back. No payment, no sign-up.</p>

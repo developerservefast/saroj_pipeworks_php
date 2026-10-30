@@ -116,6 +116,15 @@
                                     @endif
                                 @endif
                             </div>
+        @if ($product->stock_quantity !== null)
+            @if ($product->stock_quantity === 0)
+                <p class="mt-1 text-xs font-semibold text-red-600">Out of stock</p>
+            @elseif ($product->stock_quantity <= 5)
+                <p class="mt-1 text-xs font-semibold text-amber-600">Only {{ $product->stock_quantity }} left</p>
+            @else
+                <p class="mt-1 text-xs font-semibold text-green-600">In stock: {{ $product->stock_quantity }}</p>
+            @endif
+        @endif
                             <div class="mt-auto flex flex-wrap gap-1 pt-2">
                                 @foreach ($product->variants->whereNotNull('hex') as $v)
                                     <span title="{{ $v->name }}" class="h-4 w-4 rounded-full border" style="background: {{ $v->hex }}"></span>

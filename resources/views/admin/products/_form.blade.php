@@ -90,6 +90,12 @@
         <input type="text" name="warranty" value="{{ old('warranty', $p->warranty ?? '') }}" class="input">
     </div>
 
+    <div>
+        <label class="{{ $label }}">Stock quantity</label>
+        <input type="number" min="0" step="1" name="stock_quantity" value="{{ old('stock_quantity', $p->stock_quantity ?? '') }}" class="input">
+        <p class="mt-1 text-xs text-gray-500">Leave empty if you don't track stock.</p>
+    </div>
+
     <div class="sm:col-span-3 rounded-xl border border-gray-200 p-4">
         <p class="font-semibold text-gray-800">Variants</p>
         <p class="mb-3 text-xs text-gray-500">Each variant (for example a colour or size) has its own name. Tick Shade to pick a swatch colour. Price and image are optional.</p>

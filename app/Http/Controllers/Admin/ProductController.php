@@ -243,6 +243,7 @@ class ProductController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
             'discount_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
             'unit' => ['nullable', 'string', 'max:50'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0'],
             'warranty' => ['nullable', 'string', 'max:255'],
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['image', 'max:2048'],

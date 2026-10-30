@@ -23,7 +23,10 @@ Route::post('/services/request', [ServicePageController::class, 'store'])
     ->name('services.request');
 
 Route::view('/about', 'about')->name('about');
-Route::view('/contact', 'contact')->name('contact');
+Route::get('/contact', fn () => view('contact'))->name('contact');
+Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('contact.send');
 
 Route::prefix('admin')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -72,5 +75,9 @@ Route::prefix('admin')->group(function () {
         Route::resource('service-requests', ServiceRequestController::class)
             ->only(['index', 'show', 'update', 'destroy'])
             ->names('admin.service-requests');
+
+        Route::resource('contact-messages', \App\Http\Controllers\Admin\ContactMessageController::class)
+            ->only(['index', 'show', 'destroy'])
+            ->names('admin.contact-messages');
     });
 });
