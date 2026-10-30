@@ -8,5 +8,5 @@ class Brand extends Model
 {
     protected $fillable = ['name', 'is_active'];
 
-    public function products() { return $this->hasMany(Product::class); }
+    public function products() { return $this->belongsToMany(Product::class, 'brand_product'); }
 }
