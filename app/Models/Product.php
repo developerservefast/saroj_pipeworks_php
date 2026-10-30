@@ -22,4 +22,6 @@ class Product extends Model
     public function brandRecord() { return $this->belongsTo(Brand::class, 'brand_id'); }
     public function images() { return $this->hasMany(ProductImage::class)->orderBy('sort_order')->orderBy('id'); }
     public function variants() { return $this->hasMany(ProductVariant::class)->orderBy('sort_order')->orderBy('id'); }
+    public function brands() { return $this->belongsToMany(Brand::class, 'brand_product'); }
+    public function products() { return $this->belongsToMany(Product::class, 'brand_product'); }
 }

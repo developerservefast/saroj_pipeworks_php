@@ -9,7 +9,10 @@
 
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
     <p class="text-sm text-gray-500">{{ $products->total() }} products</p>
-    <a href="{{ route('admin.products.create') }}" class="btn-primary">+ Add Product</a>
+    <div class="flex gap-2">
+        <a href="{{ route('admin.products.import') }}" class="btn-outline">Import Products</a>
+        <a href="{{ route('admin.products.create') }}" class="btn-primary">+ Add Product</a>
+    </div>
 </div>
 
 <form method="GET" class="card mb-4 grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4">

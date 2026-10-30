@@ -29,13 +29,15 @@
         <select name="product_category_id" id="subSel" required class="input"></select>
     </div>
     <div>
-        <label class="{{ $label }}">Brand</label>
-        <select name="brand_id" class="input">
-            <option value="">No brand</option>
-            @foreach ($brands as $b)
-                <option value="{{ $b->id }}" @selected(old('brand_id', $p->brand_id ?? '') == $b->id)>{{ $b->name }}</option>
-            @endforeach
-        </select>
+        <label class="{{ $label }}">Brands (tick all that apply)</label>
+        @php $selBrands = array_map('intval', old('brand_ids', $p ? $p->brands->pluck('id')->all() : [])); @endphp
+        <div class="flex max-h-24 flex-wrap gap-x-4 gap-y-2 overflow-y-auto rounded-lg border border-gray-300 p-3 text-sm">
+            @forelse ($brands as $b)
+                <label class="flex items-center gap-2"><input type="checkbox" name="brand_ids[]" value="{{ $b->id }}" @checked(in_array($b->id, $selBrands, true))> {{ $b->name }}</label>
+            @empty
+                <span class="text-gray-500">No brands yet. Add them on the Brands page.</span>
+            @endforelse
+        </div>
     </div>
 
     <div class="sm:col-span-3">

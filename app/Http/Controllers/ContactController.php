@@ -22,12 +22,13 @@ class ContactController extends Controller
         } elseif (strlen($phone) === 11 && str_starts_with($phone, '0')) {
             $phone = substr($phone, 1);
         }
+
         $request->merge([
             'phone' => $phone,
             'name' => trim(preg_replace('/\s+/', ' ', (string) $request->input('name'))),
             'email' => strtolower(trim((string) $request->input('email'))) ?: null,
-            'subject' => trim(strip_tags((string) $request->input('subject'))) ?: null,
-            'message' => trim(strip_tags((string) $request->input('message'))),
+            'subject' => trim((string) $request->input('subject')) ?: null,
+            'message' => trim((string) $request->input('message')),
         ]);
 
         $data = $request->validate([

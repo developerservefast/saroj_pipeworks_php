@@ -18,13 +18,13 @@ class ProductController extends Controller
         $sorts = ['newest' => ['id', 'desc'], 'oldest' => ['id', 'asc'], 'name' => ['name', 'asc'], 'category' => ['product_category_id', 'asc']];
         [$col, $dir] = $sorts[$request->sort] ?? $sorts['newest'];
 
-        $products = Product::with(['category.parent', 'brandRecord'])
+        $products = Product::with(['category.parent', 'brands'])
             ->when($request->q, fn ($query, $term) => $query->where('name', 'like', "%{$term}%"))
             ->when($request->category, function ($query, $id) {
                 $ids = ProductCategory::where('parent_id', $id)->pluck('id')->push((int) $id);
                 $query->whereIn('product_category_id', $ids);
             })
-            ->when($request->brand, fn ($query, $id) => $query->where('brand_id', $id))
+            ->when($request->brand, fn ($query, $id) => $query->whereHas('brands', fn ($b) => $b->where('brands.id', $id)))
             ->when($request->status === 'active', fn ($query) => $query->where('is_active', true))
             ->when($request->status === 'hidden', fn ($query) => $query->where('is_active', false))
             ->when(in_array($request->badge, ['is_bestseller', 'is_trending', 'is_latest'], true), fn ($query) => $query->where($request->badge, true))
@@ -40,7 +40,7 @@ class ProductController extends Controller
 
     public function duplicate(Product $product)
     {
-        $product->load(['images', 'variants', 'sizes']);
+        $product->load(['images', 'variants', 'sizes', 'brands']);
         $disk = Storage::disk('public');
         $copyFile = function (?string $path, string $dir) use ($disk) {
             if (! $path || ! $disk->exists($path)) return null;
@@ -69,6 +69,7 @@ class ProductController extends Controller
             ]);
         }
         $copy->sizes()->sync($product->sizes->pluck('id')->all());
+        $copy->brands()->sync($product->brands->pluck('id')->all());
 
         return redirect()->route('admin.products.edit', $copy)->with('success', 'Product duplicated (hidden). Edit it, then tick "Show on website".');
     }
@@ -117,13 +118,14 @@ class ProductController extends Controller
         $this->saveImages($product, $request);
         $this->saveVariants($product, $request);
         $this->syncSizes($product, $request);
+        $this->syncBrands($product, $request);
 
         return redirect()->route('admin.products.index')->with('success', 'Product added.');
     }
 
     public function edit(Product $product)
     {
-        $product->load(['images', 'variants', 'sizes']);
+        $product->load(['images', 'variants', 'sizes', 'brands']);
 
         return view('admin.products.edit', $this->formData() + ['product' => $product]);
     }
@@ -134,6 +136,7 @@ class ProductController extends Controller
         $this->saveImages($product, $request);
         $this->saveVariants($product, $request);
         $this->syncSizes($product, $request);
+        $this->syncBrands($product, $request);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }
@@ -167,6 +170,16 @@ class ProductController extends Controller
         $ids = array_map('intval', $request->input('size_ids', []));
         $product->sizes()->sync($ids);
         $product->update(['size' => $product->sizes()->orderBy('name')->pluck('name')->implode(', ') ?: null]);
+    }
+
+    private function syncBrands(Product $product, Request $request): void
+    {
+        $ids = array_values(array_unique(array_map('intval', $request->input('brand_ids', []))));
+        $product->brands()->sync($ids);
+        $product->update([
+            'brand_id' => $ids[0] ?? null,
+            'brand' => $product->brands()->orderBy('name')->pluck('name')->implode(', ') ?: null,
+        ]);
     }
 
     private function saveImages(Product $product, Request $request): void
@@ -233,7 +246,8 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'product_category_id' => ['required', 'exists:product_categories,id'],
-            'brand_id' => ['nullable', 'exists:brands,id'],
+            'brand_ids' => ['nullable', 'array'],
+            'brand_ids.*' => ['exists:brands,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'details' => ['nullable', 'string'],
@@ -264,9 +278,7 @@ class ProductController extends Controller
         $data['is_trending'] = $request->boolean('is_trending');
         $data['is_latest'] = $request->boolean('is_latest');
         $data['discount_percent'] = (int) ($data['discount_percent'] ?? 0);
-        unset($data['images'], $data['remove_images'], $data['variants'], $data['size_ids']);
-
-        $data['brand'] = ! empty($data['brand_id']) ? Brand::whereKey($data['brand_id'])->value('name') : null;
+        unset($data['images'], $data['remove_images'], $data['variants'], $data['size_ids'], $data['brand_ids']);
 
         return $data;
     }

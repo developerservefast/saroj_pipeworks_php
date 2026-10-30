@@ -2,34 +2,42 @@
 
 namespace App\Providers;
 
+use App\Models\Setting;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        \Illuminate\Support\Facades\RateLimiter::for('login', function (\Illuminate\Http\Request $request) {
-            return \Illuminate\Cache\RateLimiting\Limit::perHour(5)->by(strtolower((string) $request->input('email')) . '|' . $request->ip());
-        });
+        // Admin login: limit per IP (stops one IP trying many emails)
+        // and per email+IP (stops hammering one account).
+        RateLimiter::for('login', fn (Request $r) => [
+            Limit::perMinute(10)->by('ip:' . $r->ip()),
+            Limit::perHour(10)->by(strtolower((string) $r->input('email')) . '|' . $r->ip()),
+        ]);
+
+        // Public contact form.
+        RateLimiter::for('contact', fn (Request $r) => [
+            Limit::perMinute(3)->by($r->ip()),
+            Limit::perHour(10)->by($r->ip()),
+        ]);
 
         try {
-            foreach (\App\Models\Setting::pluck('value', 'key') as $k => $v) {
-                if ($v !== null && $v !== '') config(['business.' . $k => $v]);
+            foreach (Setting::pluck('value', 'key') as $k => $v) {
+                if ($v !== null && $v !== '') {
+                    config(['business.' . $k => $v]);
+                }
             }
         } catch (\Throwable $e) {
             // settings table not created yet
         }
-        //
     }
 }
