@@ -13,13 +13,13 @@
     ];
 @endphp
 <section id="hero" class="relative overflow-hidden bg-brand-dark text-white">
-    <div class="relative h-[calc(100svh-4.5rem)] min-h-[480px] md:h-[calc(100svh-6rem)] md:min-h-[520px]">
+    <div class="relative h-[calc(80svh-4.5rem)] min-h-[460px] md:h-[calc(100svh-6rem)] md:min-h-[520px]">
         @foreach ($slides as [$h, $p, $g, $btn, $href])
             <div data-slide class="absolute inset-0 bg-gradient-to-br {{ $g }} transition-opacity duration-700 {{ $loop->first ? 'opacity-100' : 'opacity-0 pointer-events-none' }}">
                 @php $img = 'images/hero/slide-' . $loop->iteration . '.webp'; @endphp
                 @if (file_exists(public_path($img)))
-                    <img src="{{ asset($img) }}" alt="" class="absolute inset-0 h-full w-full object-cover" @if (! $loop->first) loading="lazy" @endif>
-                    <div class="absolute inset-0 bg-brand-dark/70 sm:bg-transparent sm:bg-gradient-to-r sm:from-brand-dark/90 sm:via-brand-dark/60 sm:to-brand-dark/20"></div>
+                    <img src="{{ asset($img) }}" alt="" class="absolute inset-0 h-full w-full object-cover object-[70%_70%] sm:object-center" @if (! $loop->first) loading="lazy" @endif>
+                    <div class="absolute inset-0 bg-gradient-to-t from-brand-dark/85 via-brand-dark/55 to-brand-dark/30 sm:bg-gradient-to-r sm:from-brand-dark/90 sm:via-brand-dark/60 sm:to-brand-dark/20"></div>
                 @endif
                 
                 

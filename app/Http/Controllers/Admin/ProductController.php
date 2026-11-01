@@ -29,7 +29,7 @@ class ProductController extends Controller
             ->when($request->status === 'hidden', fn ($query) => $query->where('is_active', false))
             ->when(in_array($request->badge, ['is_bestseller', 'is_trending', 'is_latest'], true), fn ($query) => $query->where($request->badge, true))
             ->orderBy($col, $dir)
-            ->paginate(20)->withQueryString();
+            ->paginate(10)->withQueryString();
 
         return view('admin.products.index', [
             'products' => $products,

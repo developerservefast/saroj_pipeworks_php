@@ -19,14 +19,14 @@ class ProductPageController extends Controller
 
     $products = null;
     if ($active || $search !== '') {
-        $q = \App\Models\Product::with(['brandRecord', 'variants'])->where('is_active', true)->whereHas('category', fn ($c) => $c->where('is_active', true));
+        $q = \App\Models\Product::with(['brands', 'variants'])->where('is_active', true)->whereHas('category', fn ($c) => $c->where('is_active', true));
         if ($active) $q->whereIn('product_category_id', $active->children->pluck('id')->push($active->id));
         if ($search !== '') {
         foreach (preg_split('/\s+/', mb_substr($search, 0, 100)) as $w) {
             $w = addcslashes($w, '%_\\');
             $q->where(fn ($s) => $s->where('name', 'like', "%{$w}%")
                 ->orWhere('brand', 'like', "%{$w}%")
-                ->orWhereHas('brandRecord', fn ($b) => $b->where('name', 'like', "%{$w}%"))
+                ->orWhereHas('brands', fn ($b) => $b->where('name', 'like', "%{$w}%"))
                 ->orWhereHas('category', fn ($c) => $c->where('name', 'like', "%{$w}%")));
         }
     }
@@ -39,7 +39,7 @@ class ProductPageController extends Controller
     public function show(Product $product)
     {
         abort_unless($product->is_active, 404);
-        $product->load(['category.parent', 'images', 'variants', 'sizes', 'brandRecord']);
+        $product->load(['category.parent', 'images', 'variants', 'sizes', 'brands']);
         abort_unless($product->category->is_active && (! $product->category->parent || $product->category->parent->is_active), 404);
 
         $related = Product::where('is_active', true)

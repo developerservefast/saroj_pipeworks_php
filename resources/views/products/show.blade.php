@@ -7,7 +7,7 @@
 @section('content')
 @php
     $tel = preg_replace('/[^0-9+]/', '', (string) config('business.phone'));
-    $brandName = $product->brandRecord?->name ?? $product->brand;
+    $brandName = $product->brand ?: $product->brandRecord?->name;
     $parent = $product->category->parent;
     $gallery = $product->images->pluck('path')->all() ?: ($product->image ? [$product->image] : []);
     $fmt = fn ($n) => '₹'.number_format($n, 2);
@@ -54,7 +54,7 @@
             <p class="text-sm font-medium text-brand">@if ($parent){{ $parent->name }} &rsaquo; @endif{{ $product->category->name }}</p>
             <h1 class="mt-1 break-words text-2xl font-bold text-brand-dark sm:text-4xl">{{ $product->name }}</h1>
             @if ($brandName)
-                <p class="mt-2 text-sm text-gray-500">Brand: <span class="font-semibold text-gray-700">{{ $brandName }}</span></p>
+                <p class="mt-2 text-sm text-gray-500">Brand(s): <span class="font-semibold text-gray-700">{{ $brandName }}</span></p>
             @endif
 
             <div class="mt-5 rounded-2xl bg-sky-50 p-4 ring-1 ring-sky-100 sm:p-5">
@@ -107,7 +107,7 @@
 
             @if ($brandName || $product->size || $product->unit || $product->warranty)
                 <dl class="mt-6 divide-y divide-gray-100 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-gray-100">
-                    @if ($brandName)<div class="flex justify-between gap-4 px-4 py-3"><dt class="text-gray-500">Brand</dt><dd class="text-right font-medium text-gray-800">{{ $brandName }}</dd></div>@endif
+                    @if ($brandName)<div class="flex justify-between gap-4 px-4 py-3"><dt class="text-gray-500">Brand(s)</dt><dd class="text-right font-medium text-gray-800">{{ $brandName }}</dd></div>@endif
                     @if ($product->size)<div class="flex justify-between gap-4 px-4 py-3"><dt class="text-gray-500">Size</dt><dd class="text-right font-medium text-gray-800">{{ $product->size }}</dd></div>@endif
                     @if ($product->unit)<div class="flex justify-between gap-4 px-4 py-3"><dt class="text-gray-500">Unit</dt><dd class="text-right font-medium text-gray-800">{{ $product->unit }}</dd></div>@endif
                     @if ($product->warranty)<div class="flex justify-between gap-4 px-4 py-3"><dt class="text-gray-500">Warranty</dt><dd class="text-right font-medium text-gray-800">{{ $product->warranty }}</dd></div>@endif

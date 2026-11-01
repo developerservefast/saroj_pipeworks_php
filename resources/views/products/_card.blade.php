@@ -6,7 +6,7 @@
         @endif
     </div>
     <div class="flex flex-1 flex-col border-t border-gray-100 p-3 sm:p-4">
-        <p class="truncate text-[11px] font-medium uppercase tracking-wide text-brand sm:text-xs">{{ $product->brandRecord?->name ?? $product->brand }}</p>
+        <p class="truncate text-[11px] font-medium uppercase tracking-wide text-brand sm:text-xs">{{ $product->brand ?: $product->brandRecord?->name }}</p>
         <p class="mt-1 line-clamp-2 text-sm font-semibold text-brand-dark sm:text-base">{{ $product->name }}</p>
         @php $disc = (int) $product->discount_percent; @endphp
         <div class="mt-2 flex flex-wrap items-baseline gap-x-2">
