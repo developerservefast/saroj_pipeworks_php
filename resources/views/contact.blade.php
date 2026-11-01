@@ -147,6 +147,19 @@
                         return d;
                     }
 
+                    function looksFake(d) {
+                        if (/(\d)\1{5,}/.test(d)) return true;
+                        if (new Set(d.split('')).size <= 2) return true;
+                        var up = 1, down = 1;
+                        for (var i = 1; i < d.length; i++) {
+                            var diff = +d[i] - +d[i - 1];
+                            up = diff === 1 ? up + 1 : 1;
+                            down = diff === -1 ? down + 1 : 1;
+                            if (up >= 7 || down >= 7) return true;
+                        }
+                        return false;
+                    }
+
                     var rules = {
                         name: function (v) {
                             v = v.trim().replace(/\s+/g, ' ');
@@ -161,6 +174,7 @@
                             if (d === '') return 'Please enter your mobile number.';
                             if (!/^[6-9]\d{9}$/.test(d)) return 'Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.';
                             if (/^(\d)\1{9}$/.test(d)) return 'Please enter a real mobile number.';
+                            if (looksFake(d)) return 'Please enter a real mobile number.';
                             return '';
                         },
                         email: function (v) {

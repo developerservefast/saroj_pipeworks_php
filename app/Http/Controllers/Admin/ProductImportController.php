@@ -200,7 +200,7 @@ class ProductImportController extends Controller
                 if ($d['sizes']) {
                     $ids = collect($d['sizes'])->map(fn ($n) => $this->resolveSize($n)->id)->unique()->all();
                     $product->sizes()->sync($ids);
-                    $product->update(['size' => $product->sizes()->orderBy('name')->pluck('name')->implode(', ') ?: null]);
+                    $product->update(['size' => \App\Models\Size::joinNames($product->sizes()->pluck('name')->all())]);
                 }
 
                 if ($d['variants']) {

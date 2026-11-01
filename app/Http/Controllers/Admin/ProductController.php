@@ -161,7 +161,7 @@ class ProductController extends Controller
         return [
             'categories' => $this->categoryTree(),
             'brands' => Brand::where('is_active', true)->orderBy('name')->get(),
-            'sizes' => Size::where('is_active', true)->orderBy('name')->get(),
+            'sizes' => Size::where('is_active', true)->get()->sortBy(fn ($s) => [Size::sortKey($s->name), $s->name])->values(),
         ];
     }
 
@@ -169,7 +169,7 @@ class ProductController extends Controller
     {
         $ids = array_map('intval', $request->input('size_ids', []));
         $product->sizes()->sync($ids);
-        $product->update(['size' => $product->sizes()->orderBy('name')->pluck('name')->implode(', ') ?: null]);
+        $product->update(['size' => \App\Models\Size::joinNames($product->sizes()->pluck('name')->all())]);
     }
 
     private function syncBrands(Product $product, Request $request): void

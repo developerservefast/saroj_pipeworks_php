@@ -75,17 +75,17 @@
                 @endif
             </div>
 
-            @if ($product->description)
-                @if ($product->stock_quantity !== null)
-                @if ($product->stock_quantity === 0)
+            @if ($product->stock_quantity !== null)
+                @if ($product->stock_quantity <= 0)
                     <p class="mt-4 inline-block rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">Out of stock</p>
-                @elseif ($product->stock_quantity <= 5)
+                @elseif ($product->stock_quantity <= 10)
                     <p class="mt-4 inline-block rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">Only {{ $product->stock_quantity }} left</p>
                 @else
                     <p class="mt-4 inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">In stock</p>
                 @endif
             @endif
 
+            @if ($product->description)
             <div class="rich mt-5 leading-relaxed text-gray-700">{!! \App\Support\Html::display($product->description) !!}</div>
             @endif
 
@@ -98,7 +98,7 @@
                                 @if ($v->hex) <span class="h-5 w-5 rounded-full border border-gray-300" style="background: {{ $v->hex }}"></span> @endif
                                 @if ($v->image) <img src="{{ asset('storage/'.$v->image) }}" class="h-7 w-7 rounded-full object-cover" alt=""> @endif
                                 {{ $v->name }}
-                                @if ($v->price !== null) <span class="text-gray-500">&middot; {!! $rs !!}{{ number_format($v->price, 2) }}</span> @endif
+                                @if ($v->price !== null) <span class="text-gray-500">&middot; {!! $rs !!}{{ number_format($v->price * (100 - $disc) / 100, 2) }}@if ($disc > 0) <s class="text-gray-400">{!! $rs !!}{{ number_format($v->price, 2) }}</s>@endif</span> @endif
                             </span>
                         @endforeach
                     </div>

@@ -33,7 +33,7 @@ class ContactController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:60', 'regex:/^[\pL][\pL\pM\s.\'\-]*$/u'],
-            'phone' => ['required', 'regex:/^[6-9]\d{9}$/', 'not_regex:/^(\d)\1{9}$/'],
+            'phone' => ['required', 'regex:/^[6-9]\d{9}$/', 'not_regex:/^(\d)\1{9}$/', fn ($attr, $value, $fail) => \App\Support\Phone::looksFake((string) $value) ? $fail('Please enter a real mobile number.') : null],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'subject' => ['nullable', 'string', 'max:120'],
             'message' => ['required', 'string', 'min:10', 'max:2000'],
