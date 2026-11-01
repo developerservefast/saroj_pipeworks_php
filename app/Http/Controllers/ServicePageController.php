@@ -31,7 +31,7 @@ class ServicePageController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:60', 'regex:/^[\p{L}][\p{L}\p{M}\s.\x27\-]*$/u'],
             'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['required', 'regex:/^[6-9][0-9]{9}$/'],
+            'phone' => ['required', 'regex:/^[6-9][0-9]{9}$/', fn ($attr, $value, $fail) => \App\Support\Phone::looksFake((string) $value) ? $fail('Please enter a real mobile number.') : null],
             'address' => ['required', 'string', 'min:10', 'max:500'],
             'service_ids' => ['required', 'array', 'min:1'],
             'service_ids.*' => ['integer', Rule::exists('services', 'id')->where('is_active', true)],
